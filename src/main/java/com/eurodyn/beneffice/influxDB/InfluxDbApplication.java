@@ -4,7 +4,6 @@ import com.eurodyn.beneffice.influxDB.service.InfluxDBService;
 import lombok.extern.java.Log;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -24,14 +23,11 @@ public class InfluxDbApplication implements ApplicationRunner {
 
 
 	@Override
-	public void run(ApplicationArguments args) throws Exception {
-		DefaultApplicationArguments args1 = new DefaultApplicationArguments("esthesis",
-				"a839ed04424d0eede3c4223190fb096c", "zzzz",
-				"hardwareId");
+	public void run(ApplicationArguments args) {
 //		DefaultApplicationArguments args1 = new DefaultApplicationArguments("esthesis",
-//				"a839ed04424d0eede3c4223190fb096c", "zzzz",
+//				"zzzzz", "a839ed04424d0eede3c4223190fb096c",
 //				"hardwareId");
 		influxDBService.
-				run(args1);
+				run();
 	}
 }

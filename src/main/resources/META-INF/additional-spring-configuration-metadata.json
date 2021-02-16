@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "database",
+      "type": "java.lang.String",
+      "description": "Description for database."
+    },
+    {
+      "name": "changeValueFrom",
+      "type": "java.lang.String",
+      "description": "Description for changeValueFrom."
+    },
+    {
+      "name": "changeValueTo",
+      "type": "java.lang.String",
+      "description": "Description for changeValueTo."
+    },
+    {
+      "name": "measurement",
+      "type": "java.lang.String",
+      "description": "Description for measurement."
+    }
+  ]
+}

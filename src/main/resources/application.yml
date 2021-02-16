@@ -1,6 +1,6 @@
 spring:
   influxdb:
-    url: http://localhost:8087
+    url: http://localhost:7777
     username: esthesisTest
     password: esthesis
     database: esthesis
@@ -8,3 +8,8 @@ spring:
     connect-timeout: 10
     read-timeout: 30
     write-timeout: 10
+
+database: esthesis
+changeValueFrom: a839ed04424d0eede3c4223190fb096c
+changeValueTo: b813308e4080bcefe1ff19f8acde2110
+measurement: hardwareId

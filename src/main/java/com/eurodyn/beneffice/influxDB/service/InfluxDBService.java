@@ -30,6 +30,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class InfluxDBService {
 
+  @Value("${database}")
+  public String database;
+
+  @Value("${changeValueFrom}")
+  public String from;
+
+  @Value("${changeValueTo}")
+  public String to;
+
+  @Value("${measurement}")
+  public String measurement;
+
   private InfluxDB influxDB;
 
   @Value("${spring.influxdb.url}")
@@ -56,6 +68,10 @@ public class InfluxDBService {
 
   private void moveValue(String measurement, String database, String changeFrom, String changeTo,
       String nameOfValue) {
+//    if (measurement.contains("Verbund")) {
+//      return;
+//    }
+
     QueryResult query = influxDB.query(
         new Query(
             "Select * from " + measurement + " where " + nameOfValue + "='" + changeFrom + "'"));
@@ -83,13 +99,15 @@ public class InfluxDBService {
     for (int i = 0; i < points.size(); i++) {
       batchPoints.point(points.get(i));
       if (i % 10000 == 0 || i == points.size() - 1) {
-        log.info("Writing batch points:" + batchPoints.getPoints().size());
+        log.info("Measurement ### " + measurement + " ### Writing batch points:" + batchPoints
+            .getPoints().size());
         influxDB.write(batchPoints);
         //reset batch point
         batchPoints = BatchPoints.database(database)
             .build();
       }
     }
+    log.info("Total ### " + measurement + " ### Migrated:" + points.size());
   }
 
   private List<List<Object>> getValues(QueryResult query) {
@@ -122,7 +140,7 @@ public class InfluxDBService {
     Builder point = Point.measurement(measurement);
     List<String> weather_lastMeasurement = List
         .of("Weather_LastMeasurement", "Weather_CurrentCloudiness", "Weather_CurrentHumidity",
-            "Weather_StationId");
+            "Weather_StationId", "Sunrise_Time", "Sunset_Time", "temp_sensor");
     for (int i = 0; i < value.size(); i++) {
       if (columnsMap.get(i).equals("time")) {
         String time = value.get(i).toString();
@@ -134,6 +152,11 @@ public class InfluxDBService {
         if (columnsMap.get(i).contains(hardwareId)) {
           //use the new hardwareId
           point.addField(hardwareId, to);
+        } else if (columnsMap.get(i).contains("latitude") || columnsMap.get(i)
+            .contains("longitude") || columnsMap.get(i).contains("cpuTemperature") || columnsMap
+            .get(i).contains("load1") || columnsMap.get(i).contains("load5") || columnsMap.get(i)
+            .contains("load15")) {
+          point.addField(columnsMap.get(i), ((Double) value.get(i)).floatValue());
         } else if (columnsMap.get(i).contains("value") && value.get(i) instanceof Double) {
           //use the new hardwareId
           if (weather_lastMeasurement.contains(measurement)) {
@@ -160,9 +183,9 @@ public class InfluxDBService {
 
   private void createDatabase(String databaseName) {
     OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient().newBuilder()
-        .connectTimeout(2, TimeUnit.MINUTES)
-        .readTimeout(3, TimeUnit.MINUTES)
-        .writeTimeout(3, TimeUnit.MINUTES);
+        .connectTimeout(10, TimeUnit.MINUTES)
+        .readTimeout(10, TimeUnit.MINUTES)
+        .writeTimeout(10, TimeUnit.MINUTES);
     influxDB = InfluxDBFactory.connect(databaseURL, userName, password, okHttpClientBuilder);
     Pong response = influxDB.ping();
     if (response.getVersion().equalsIgnoreCase("unknown")) {
@@ -177,26 +200,19 @@ public class InfluxDBService {
 //    influxDB.setLogLevel(InfluxDB.LogLevel.BASIC);
   }
 
-  public void run(ApplicationArguments args) {
+  public void run() {
     log.info("Running application test");
-//    influxDBTemplate.createDatabase();
-    String database = args.getSourceArgs()[0];
-    String from = args.getSourceArgs()[1];
-    String to = args.getSourceArgs()[2];
-    String nameOfValue = args.getSourceArgs()[3];
     createDatabase(database);
     wireValues(database, from, to,
-        nameOfValue);
-//    System.exit(0);
+        measurement);
+    log.info(
+        "Finished moving data for \nMeasurement:" + measurement + "\nFrom:\t" + from + "\nTo:\t"
+            + to);
+    System.exit(0);
   }
 
   private void dropDatabase(String dbName) {
     QueryResult query = influxDB.query(new Query("Drop database " + dbName));
-
-  }
-
-  private void testRead() {
-
   }
 
   @PreDestroy
